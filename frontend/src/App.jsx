@@ -6,41 +6,56 @@ function App() {
   const [token, setToken] = useState(localStorage.getItem('token') || '');
   const [statusMessage, setStatusMessage] = useState('');
 
+  // Define your live backend URL here
+  const API_URL = 'https://jwt-auth-app-ffbz.onrender.com';
+
   const handleRegister = async (e) => {
     e.preventDefault();
-    const response = await fetch('http://localhost:5000/register', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, password })
-    });
-    const data = await response.json();
-    setStatusMessage(data.message);
+    try {
+      const response = await fetch(`${API_URL}/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      });
+      const data = await response.json();
+      setStatusMessage(data.message || data.error);
+    } catch (error) {
+      setStatusMessage('Network error during registration.');
+    }
   };
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    const response = await fetch('http://localhost:5000/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, password })
-    });
-    const data = await response.json();
-    
-    if (data.token) {
-      setToken(data.token);
-      localStorage.setItem('token', data.token); // Persist token
-      setStatusMessage('Login successful!');
-    } else {
-      setStatusMessage(data.message);
+    try {
+      const response = await fetch(`${API_URL}/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      });
+      const data = await response.json();
+      
+      if (data.token) {
+        setToken(data.token);
+        localStorage.setItem('token', data.token); // Persist token
+        setStatusMessage('Login successful!');
+      } else {
+        setStatusMessage(data.error || data.message);
+      }
+    } catch (error) {
+      setStatusMessage('Network error during login.');
     }
   };
 
   const accessProtectedRoute = async () => {
-    const response = await fetch('http://localhost:5000/protected', {
-      headers: { 'Authorization': `Bearer ${token}` }
-    });
-    const data = await response.json();
-    setStatusMessage(data.message);
+    try {
+      const response = await fetch(`${API_URL}/protected`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const data = await response.json();
+      setStatusMessage(data.message || data.error);
+    } catch (error) {
+      setStatusMessage('Network error while accessing protected route.');
+    }
   };
 
   const handleLogout = () => {
